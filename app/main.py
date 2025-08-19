@@ -7,7 +7,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-import lightgbm as lgb
+from sklearn.ensemble import HistGradientBoostingClassifier   ### CHANGED
 import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Optimal Husleje – Demo", layout="wide")
@@ -59,12 +59,12 @@ pre = ColumnTransformer([
                       ("oh", OneHotEncoder(handle_unknown="ignore"))]), cat_cols)
 ])
 
-gbm = lgb.LGBMClassifier(
-    n_estimators=700,
+### CHANGED – Brug HistGradientBoosting i stedet for LightGBM
+gbm = HistGradientBoostingClassifier(
+    max_iter=700,
     learning_rate=0.03,
-    subsample=0.85,
-    colsample_bytree=0.85,
-    reg_lambda=10,
+    max_depth=None,
+    l2_regularization=10,
     random_state=42
 )
 
@@ -160,8 +160,8 @@ num_out = num_cols
 cat_out = enc.get_feature_names_out(cat_cols).tolist()
 feat_names = num_out + cat_out
 
-booster = pipe.named_steps["model"]
-imp = booster.feature_importances_
+### CHANGED – HistGradientBoosting har ikke booster.feature_importances_, men feature_importances_ direkte
+imp = pipe.named_steps["model"].feature_importances_
 fi = pd.DataFrame({"feature": feat_names, "importance": imp}).sort_values("importance", ascending=False).head(20)
 st.dataframe(fi.reset_index(drop=True))
 
